@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore API Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section h2 {
+            color: #5a67d8;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #5a67d8;
+            box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #5a67d8, #667eea);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(90, 103, 216, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .secondary-btn {
+            background: linear-gradient(135deg, #718096, #4a5568);
+        }
+
+        .danger-btn {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+        }
+
+        .results {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .results h3 {
+            color: #5a67d8;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        #output {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .book-card, .user-card {
+            background: #f8f9fa;
+            border-left: 4px solid #5a67d8;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .book-title, .user-name {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .book-author, .user-email {
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .book-price {
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        .search-section {
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
+        .search-section input {
+            max-width: 400px;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .success {
+            color: #38a169;
+            background: #f0fff4;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .error {
+            color: #e53e3e;
+            background: #fef5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Bookstore API</h1>
+            <p class="subtitle">Manage books and users with our RESTful API</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Search Section -->
+            <div class="section search-section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    Search
+                </h2>
+                <input type="text" id="searchInput" placeholder="Search books by title, author, or category...">
+                <button onclick="searchBooks()">Search Books</button>
+                <button onclick="getAllBooks()" class="secondary-btn">Show All Books</button>
+            </div>
+
+            <!-- Books Management -->
+            <div class="section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+                    </svg>
+                    Book Management
+                </h2>
+                <div class="form-group">
+                    <label for="bookTitle">Title</label>
+                    <input type="text" id="bookTitle" placeholder="Enter book title">
+                </div>
+                <div class="form-group">
+                    <label for="bookAuthor">Author</label>
+                    <input type="text" id="bookAuthor" placeholder="Enter author name">
+                </div>
+                <div class="form-group">
+                    <label for="bookPrice">Price ($)</label>
+                    <input type="number" id="bookPrice" step="0.01" placeholder="Enter price">
+                </div>
+                <div class="form-group">
+                    <label for="bookISBN">ISBN</label>
+                    <input type="text" id="bookISBN" placeholder="Enter ISBN">
+                </div>
+                <div class="form-group">
+                    <label for="bookCategory">Category</label>
+                    <select id="bookCategory">
+                        <option value="">Select category</option>
+                        <option value="Fiction">Fiction</option>
+                        <option value="Non-Fiction">Non-Fiction</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Mystery">Mystery</option>
+                        <option value="Science Fiction">Science Fiction</option>
+                        <option value="Biography">Biography</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bookStock">Stock</label>
+                    <input type="number" id="bookStock" placeholder="Enter stock quantity">
+                </div>
+                <div class="form-group">
+                    <label for="bookDescription">Description</label>
+                    <textarea id="bookDescription" rows="3" placeholder="Enter book description"></textarea>
+                </div>
+                <button onclick="addBook()">Add Book</button>
+                <button onclick="clearBookForm()" class="secondary-btn">Clear Form</button>
+            </div>
+
+            <!-- Users Management -->
+            <div class="section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    User Management
+                </h2>
+                <div class="form-group">
+                    <label for="userName">Full Name</label>
+                    <input type="text" id="userName" placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label for="userUsername">Username</label>
+                    <input type="text" id="userUsername" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email</label>
+                    <input type="email" id="userEmail" placeholder="Enter email address">
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Role</label>
+                    <select id="userRole">
+                        <option value="customer">Customer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button onclick="addUser()">Add User</button>
+                <button onclick="getAllUsers()" class="secondary-btn">Show All Users</button>
+                <button onclick="clearUserForm()" class="secondary-btn">Clear Form</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results">
+            <h3>Results</h3>
+            <div id="output">Ready to interact with the Bookstore API...</div>
+        </div>
+    </div>
+
+    <script src="apiMethods.js"></script>
+    <script>
+        // UI Helper Functions
+        function showMessage(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            output.innerHTML = `<div class="${className}">[${timestamp}] ${message}</div>` + output.innerHTML;
+        }
+
+        function displayData(data, title = 'Data') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (Array.isArray(data)) {
+                let html = `<div><strong>[${timestamp}] ${title} (${data.length} items):</strong><br>`;
+                data.forEach(item => {
+                    if (item.title) {
+                        // It's a book
+                        html += `
+                            <div class="book-card">
+                                <div class="book-title">${item.title}</div>
+                                <div class="book-author">by ${item.author}</div>
+                                <div class="book-price">${item.price}</div>
+                                <div>Category: ${item.category || 'N/A'} | Stock: ${item.stock || 0}</div>
+                                <div>ID: ${item.id}</div>
+                            </div>
+                        `;
+                    } else if (item.username) {
+                        // It's a user
+                        html += `
+                            <div class="user-card">
+                                <div class="user-name">${item.name}</div>
+                                <div class="user-email">${item.email}</div>
+                                <div>Username: ${item.username} | Role: ${item.role}</div>
+                                <div>ID: ${item.id}</div>
+                            </div>
+                        `;
+                    }
+                });
+                html += '</div>';
+                output.innerHTML = html + output.innerHTML;
+            } else {
+                output.innerHTML = `<div><strong>[${timestamp}] ${title}:</strong><br><pre>${JSON.stringify(data, null, 2)}</pre></div>` + output.innerHTML;
+            }
+        }
+
+        // Book Functions
+        async function getAllBooks() {
+            try {
+                showMessage('Fetching all books...');
+                const response = await api.getAllBooks();
+                displayData(response.data, 'All Books');
+                showMessage(`Successfully loaded ${response.count} books`, 'success');
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function searchBooks() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                showMessage('Please enter a search term', 'error');
+                return;
+            }
+
+            try {
+                showMessage(`Searching for "${query}"...`);
+                const response = await api.searchBooks(query);
+                displayData(response.data, `Search Results for "${query}"`);
+                showMessage(`Found ${response.count} matching books`, 'success');
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function addBook() {
+            const title = document.getElementById('bookTitle').value.trim();
+            const author = document.getElementById('bookAuthor').value.trim();
+            const price = parseFloat(document.getElementById('bookPrice').value);
+            const isbn = document.getElementById('bookISBN').value.trim();
+            const category = document.getElementById('bookCategory').value;
+            const stock = parseInt(document.getElementById('bookStock').value) || 0;
+            const description = document.getElementById('bookDescription').value.trim();
+
+            if (!title || !author || !price) {
+                showMessage('Title, author, and price are required!', 'error');
+                return;
+            }
+
+            try {
+                showMessage('Adding new book...');
+                const response = await api.createBook({
+                    title, author, price, isbn, category, stock, description
+                });
+                displayData(response.data, 'New Book Added');
+                showMessage('Book added successfully!', 'success');
+                clearBookForm();
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function clearBookForm() {
+            document.getElementById('bookTitle').value = '';
+            document.getElementById('bookAuthor').value = '';
+            document.getElementById('bookPrice').value = '';
+            document.getElementById('bookISBN').value = '';
+            document.getElementById('bookCategory').value = '';
+            document.getElementById('bookStock').value = '';
+            document.getElementById('bookDescription').value = '';
+        }
+
+        // User Functions
+        async function getAllUsers() {
+            try {
+                showMessage('Fetching all users...');
+                const response = await api.getAllUsers();
+                displayData(response.data, 'All Users');
+                showMessage(`Successfully loaded ${response.count} users`, 'success');
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function addUser() {
+            const name = document.getElementById('userName').value.trim();
+            const username = document.getElementById('userUsername').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const role = document.getElementById('userRole').value;
+
+            if (!name || !username || !email) {
+                showMessage('Name, username, and email are required!', 'error');
+                return;
+            }
+
+            try {
+                showMessage('Adding new user...');
+                const response = await api.createUser({
+                    name, username, email, role
+                });
+                displayData(response.data, 'New User Added');
+                showMessage('User added successfully!', 'success');
+                clearUserForm();
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function clearUserForm() {
+            document.getElementById('userName').value = '';
+            document.getElementById('userUsername').value = '';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userRole').value = 'customer';
+        }
+
+        // Initialize with some data on page load
+        window.addEventListener('load', () => {
+            showMessage('Bookstore API Client loaded successfully!', 'success');
+            showMessage('Try searching for books or adding new ones using the forms above.');
+        });
+
+        // Enter key support for search
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBooks();
+            }
+        });
+    </script>
+</body>
+</html>
